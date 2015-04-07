@@ -1,16 +1,25 @@
 require 'formula'
 
 class Osmosis < Formula
+  head "https://github.com/openstreetmap/osmosis.git"
   homepage 'http://wiki.openstreetmap.org/wiki/Osmosis'
   url 'http://bretth.dev.openstreetmap.org/osmosis-build/osmosis-0.43-RELEASE.zip'
   sha256 'c891fe095b7f960f575cb39d9794c67cc7df9f4c665d2dda88dfb57b770f0bbe'
 
   # need to adjust home dir for a clean install
-  patch :DATA
+  if !build.head?
+    patch :DATA
+  end
 
   def install
-    bin.install 'bin/osmosis'
-    libexec.install %w(lib config script)
+    if build.head?
+      system "./gradlew", "assemble"
+      bin.install 'package/bin/osmosis'
+      prefix.install %w(package/lib package/config package/script)
+    else
+      bin.install 'bin/osmosis'
+      libexec.install %w(lib config script)
+    end
   end
 end
 
@@ -23,5 +32,5 @@ __END__
  MYAPP_HOME=`cd "$MYAPP_HOME" && pwd`
 +MYAPP_HOME="$MYAPP_HOME/libexec"
  cd "$saveddir"
- 
+
  # Build up the classpath of required jar files via classworlds launcher.
